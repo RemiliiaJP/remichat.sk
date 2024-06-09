@@ -45,7 +45,7 @@ on chat:
     {remi::chat} is true
     cancel event
     gamemode of player is not spectator
-    send "[生存者チャット] ‖ %player's display name%&8：&7%message%" to loop-player
+    send "[生存者チャット] ‖ %player's display name%&8：&7%message%" to all players
 
 on command:
     command is "tell" or "w"
