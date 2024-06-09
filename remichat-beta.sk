@@ -45,7 +45,7 @@ on chat:
     {remi::chat} is true
     cancel event
     gamemode of player is not spectator
-    send "[生存者チャット] ‖ %player's display name%&8：&7%message%" to all players
+    send "%player's display name%&8：%message%" to all players
 
 on command:
     command is "tell" or "w"
@@ -140,6 +140,7 @@ function reset(player: player):
     make {_player} visible
     make {_player} vulnerable
     remove every uuid of {_player} from {remi::ping::*}
+    reset tab list header of player
     command "team leave %{_player}%"
 command /reset <player>:
     permission: op
