@@ -40,12 +40,12 @@ on chat:
     gamemode of player is spectator
     loop all players:
         gamemode of loop-player is spectator
-        send "[天界チャット] ‖ %player's display name%&8：&7%message%"
+        send "[天界チャット] ‖ %player's display name%&8：&7%message%" to loop-player
 on chat:
     {remi::chat} is true
     cancel event
     gamemode of player is not spectator
-    send "[生存者チャット] ‖ %player's display name%&8：&7%message%"
+    send "[生存者チャット] ‖ %player's display name%&8：&7%message%" to loop-player
 
 on command:
     command is "tell" or "w"
