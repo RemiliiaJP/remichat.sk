@@ -88,8 +88,8 @@ function remichatGUI() :: inventory:
     set slot 3 of {_gui} to a lime dye named "&ftablis &l有効" if {remi::tab} is true
     return {_gui}
 on inventory click:
-    inventory is remichatGUI()
     event-inventory is not player's inventory
+    name of event-inventory is "チャット機能設定"
     cancel event
     if event-slot is 0:
         if {remi::chat} is true:
