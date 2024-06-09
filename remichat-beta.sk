@@ -136,6 +136,10 @@ function reset(player: player):
     reset {_player}'s food level
     reset {_player}'s walk speed
     clear potion effects of {_player}
+    set gravity of {_player} to on
+    make {_player} visible
+    make {_player} vulnerable
+    remove every uuid of {_player} from {remi::ping::*}
 command /reset <player>:
     permission: op
     trigger:
