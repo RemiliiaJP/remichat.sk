@@ -12,14 +12,29 @@ command /pingtab:
     trigger:
         if {remi::ping::*} contains uuid of player:
             remove all uuid of player from {remi::ping::*}
-            send "&8tabのping表示を無効化しました。"
+            send "&8[remichat] &8tabのping表示を無効化しました。"
             reset tab list header of player
         else:
             set {remi::ping::*} to uuid of player
-            send "&8tabにpingを表示します！"
+            send "&8[remichat] &8tabにpingを表示します！"
+command /tabtps:
+    trigger:
+        if {remi::tps::*} contains uuid of player:
+            remove all uuid of player from {remi::ping::*}
+            reset tab list footer of player
+            send "&8[remichat] tabのtps表示を無効化しました！"
+        else:
+            set {remi::tps::*} to uuid of player
+            send "&8[remichat] tabにtpsを表示します。"
 every 5 second:
     loop {remi::ping::*}:
         set player(loop-value)'s tab list header to "     &7Ping: &a&l%ping of player(loop-value)%&fms     "
+every 1 second:
+    loop tps:
+        set {_tps} to loop-value
+        stop loop
+    loop {remi::tps::*}:
+        set player(loop-value)'s tab list footer to "     &7tps: &c&l%{_tps}%     "
 on join:
     if {remi::tab} is false:
         unlist all players for all players
@@ -140,7 +155,9 @@ function reset(player: player):
     make {_player} visible
     make {_player} vulnerable
     remove every uuid of {_player} from {remi::ping::*}
-    reset tab list header of player
+    remove every uuid of {_player} from {remi::tps::*}
+    reset tab list header of {_player}
+    reset tab list footer of {_player}
     command "team leave %{_player}%"
 command /reset <player>:
     permission: op
