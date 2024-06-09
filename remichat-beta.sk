@@ -1,0 +1,137 @@
+on load:
+    if {remi::chat} is not set:
+        broadcast "&8[remichat]&r 天界,生存チャット機能を有効化しました。 %nl%/remichatで無効化できます"
+        set {remi::chat} to true
+    if {remi::dm} is not set:
+        set {remi::dm} to true
+    if {remi::me} is not set:
+        set {remi::me} to true    
+    if {remi::tab} is not set:
+        set {remi::tab} to true
+command /pingtab:
+    trigger:
+        if {remi::ping::*} contains uuid of player:
+            remove all uuid of player from {remi::ping::*}
+            send "&8tabのping表示を無効化しました。"
+            reset tab list header of player
+        else:
+            set {remi::ping::*} to uuid of player
+            send "&8tabにpingを表示します！"
+every 5 second:
+    loop {remi::ping::*}:
+        set player(loop-value)'s tab list header to "     &7Ping: &a&l%ping of player(loop-value)%&fms     "
+on join:
+    if {remi::tab} is false:
+        unlist all players for all players
+    else:
+        list all players for all players
+command /skr:
+    permission: op
+    trigger:
+        {_a} is {_a}
+on command "/skr":
+    if command sender is console:
+        execute console command "/sk reload scripts"
+        stop
+    cancel event
+    execute player command "/sk reload scripts"
+on chat:
+    {remi::chat} is true
+    gamemode of player is spectator
+    loop all players:
+        gamemode of loop-player is spectator
+        send "[天界チャット] ‖ %player's display name%&8：&7%message%"
+on chat:
+    {remi::chat} is true
+    cancel event
+    gamemode of player is not spectator
+    send "[生存者チャット] ‖ %player's display name%&8：&7%message%"
+
+on command:
+    command is "tell" or "w"
+    {remi::dm} is false
+    cancel event
+    send "&8[remichat]&r &7現在個人間チャットは無効化されています。"
+on command:
+    command is "me"
+    {remi::me} is false
+    cancel event
+    send "&8[remichat]&r &7現在/meは無効化されています。" 
+command /remichat:
+    permission: op
+    trigger:
+        open remichatGUI() to player
+function remichatGUI() :: inventory:
+    set {_gui} to a chest inventory with 1 row named "チャット機能設定"
+    set slot 0 of {_gui} to a lime dye named "&f天界,生存チャット機能 &l有効" if {remi::chat} is true
+    set slot 0 of {_gui} to a gray dye named "&8天界,生存チャット機能 &7無効" if {remi::chat} is false
+    set slot 1 of {_gui} to a gray dye named "&8個人チャット &7無効" if {remi::dm} is false
+    set slot 1 of {_gui} to a lime dye named "&f個人チャット &l有効" if {remi::dm} is true
+    set slot 2 of {_gui} to a gray dye named "&8/me &7無効" if {remi::me} is false
+    set slot 2 of {_gui} to a lime dye named "&f/me &l有効" if {remi::me} is true
+    set slot 3 of {_gui} to a gray dye named "&8tablist &7無効" with lore "&8skBee必須。" if {remi::tab} is false
+    set slot 3 of {_gui} to a lime dye named "&ftablis &l有効" if {remi::tab} is true
+    return {_gui}
+on inventory click:
+    inventory is remichatGUI()
+    event-inventory is not player's inventory
+    cancel event
+    if event-slot is 0:
+        if {remi::chat} is true:
+            set {remi::chat} to false
+            broadcast "&8[remichat]&r %player's display name%が&7天界,生存チャット機能を無効化しました"
+            open remichatGUI() to player
+            stop
+        else:
+            set {remi::chat} to true
+            broadcast "&8[remichat]&r %player's display name%が&f天界,生存チャット機能を有効化しました"
+            open remichatGUI() to player
+            stop
+    if event-slot is 1:
+        if {remi::dm} is true:
+            set {remi::dm} to false
+            broadcast "&8[remichat]&r %player's display name%が&7個人間チャットを無効化しました"
+            open remichatGUI() to player
+            stop
+        else:
+            set {remi::dm} to true
+            broadcast "&8[remichat]&r %player's display name%が&f個人間チャットを有効化しました"
+            open remichatGUI() to player
+            stop
+    if event-slot is 2:
+        if {remi::me} is true:
+            set {remi::me} to false
+            broadcast "&8[remichat]&r %player's display name%が&7/meを無効化しました"
+            open remichatGUI() to player
+            stop
+        else:
+            set {remi::me} to true
+            broadcast "&8[remichat]&r %player's display name%が&f/meを有効化しました"
+            open remichatGUI() to player
+            stop
+    if event-slot is 3:
+        if {remi::tab} is true:
+            set {remi::tab} to false
+            broadcast "&8[remichat]&r %player's display name%が&7tablistを無効化しました"
+            unlist all players for all players
+            set player's tab list name to " "
+            open remichatGUI() to player
+            stop
+        else:
+            set {remi::tab} to true
+            broadcast "&8[remichat]&r %player's display name%が&ftablistを有効化しました"
+            list all players for all players
+            open remichatGUI() to player
+            stop
+function reset(player: player):
+    set {_player}'s gamemode to adventure
+    close {_player}'s inventory
+    clear {_player}'s inventory
+    heal {_player} by 514
+    clear {_player}'s enderchest
+    loop all attribute types:
+        reset loop-value attribute of {_player}
+command /reset <player>:
+    permission: op
+    trigger:
+        reset(arg-1)
