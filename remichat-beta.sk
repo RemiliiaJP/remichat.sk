@@ -127,11 +127,25 @@ function reset(player: player):
     set {_player}'s gamemode to adventure
     close {_player}'s inventory
     clear {_player}'s inventory
-    heal {_player} by 514
     clear {_player}'s enderchest
     loop all attribute types:
         reset loop-value attribute of {_player}
+    heal {_player} by 514
+    reset level progress of {_player} 
+    reset {_player}'s level
+    reset {_player}'s food level
+    reset {_player}'s walk speed
+    clear potion effects of {_player}
 command /reset <player>:
     permission: op
     trigger:
         reset(arg-1)
+command /ping-all:
+    trigger:
+        send "&f&lping of all players:"
+        loop all players:
+            set {_p} to ping of loop-player
+            send "&f%name of loop-player%:%{_p}%" to player
+            add {_p} to {_n}
+            set {_c} to loop-counter
+        send "&cAvg:%{_n}/{_c}%" to player
