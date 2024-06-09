@@ -140,6 +140,7 @@ function reset(player: player):
     make {_player} visible
     make {_player} vulnerable
     remove every uuid of {_player} from {remi::ping::*}
+    command "team leave %{_player}%"
 command /reset <player>:
     permission: op
     trigger:
@@ -153,3 +154,9 @@ command /ping-all:
             add {_p} to {_n}
             set {_c} to loop-counter
         send "&cAvg:&9%{_n}/{_c}%" to player
+command /head <offlineplayer>:
+    trigger:
+        if player's gamemode is creative:
+            give arg-1's skull to player
+        else:
+            send "&8[remichat]&r &7クリエになって使ってください"
