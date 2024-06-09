@@ -3,8 +3,8 @@
 
 機能：
 ほとんどの機能は/remichatのguiか専用のコマンドで切り替えます<br>
-・tabのプレイヤー表示を無効化(全プレイヤー)<br>
-![image](https://github.com/RemiliiaJP/remichat.sk/assets/105400064/cccfc390-5344-46c0-be1a-0a4e9fcd0be3)
+・tabのプレイヤー表示を無効化(全プレイヤー)<br><br>
+![image](https://github.com/RemiliiaJP/remichat.sk/assets/105400064/cccfc390-5344-46c0-be1a-0a4e9fcd0be3)<br>
 ・tabにping,tpsを表示(プレイヤー毎)<br>
 ``/pingtab``<br>
 ``/tabtps``<br>
