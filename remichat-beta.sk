@@ -142,10 +142,10 @@ command /reset <player>:
         reset(arg-1)
 command /ping-all:
     trigger:
-        send "&f&lping of all players:"
+        send "&8[remichat]&r &7ping of all players"
         loop all players:
             set {_p} to ping of loop-player
-            send "&f%name of loop-player%:%{_p}%" to player
+            send "&7%name of loop-player%:&a%{_p}%" to player
             add {_p} to {_n}
             set {_c} to loop-counter
-        send "&cAvg:%{_n}/{_c}%" to player
+        send "&cAvg:&9%{_n}/{_c}%" to player
