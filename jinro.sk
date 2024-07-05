@@ -65,7 +65,7 @@ function giverole():
                 if loop-value-1 is "white":
                     add 1 to {role::white}
                     if loop-value-2 is "&dエンチャンター":
-                        set level of {player::%{_c}%} to 26
+                        set level of {player::%{_c}%} to 29
                 add {player::%{_c}%} to {role::%loop-value-1%::%loop-value-2%::*}
                 send "あなたの役職は%getrole({player::%{_c}%})%" to {player::%{_c}%}
 
@@ -189,13 +189,23 @@ on damage of player:
         cancel event
         stop
     projectile is arrow
-    if getrole(attacker) is "&c人狼":
+    if tool of victim or offhand tool of victim is totem of undying:
+        increase damage by 0.5
+    else if getrole(attacker) is "&c人狼":
         increase damage by 3  
     else:
         increase damage by 2
 on item damage:
     item is bow
     cancel event
+on damage of player:
+    health of victim < final damage
+    if tool of victim or offhand tool of victim is totem of undying:
+        remove 1 totem of undying from victim
+        command "/execute as %victim% at @s run playsound minecraft:item.totem.use"
+        heal victim by 5
+        cancel event
+
 on death of player:
     set death message to ""
     reset(victim)
@@ -255,7 +265,7 @@ on break:
     gamemode of player is not creative
     cancel event
 on left click:
-    tool of player is not wooden sword 
+    tool of player is not golden hoe 
     item cooldown of arrow for player is 0 seconds
     if getrole(player) is "&c人狼":
         set item cooldown of arrow for player to 1 seconds
@@ -263,32 +273,32 @@ on left click:
         set item cooldown of arrow for player to 1.25 seconds
     push player forwards
 
-on click with wooden sword:
+on click with golden hoe:
+    item cooldown of golden hoe for player is 0 seconds
+    set item cooldown of golden hoe for player to 0.5 seconds
+    push player horizontally forwards at speed 0.4
+    push player forwards at speed 0.8
+    add potion effect of slow falling of tier 1 for 0.50 seconds to potion effects of player
     loop players in radius 6 of player:
         loop 5 time:
-            add potion effect of weakness of tier 1 for 2 tick to potion effects of player
-            add potion effect of haste of tier 25 for 2 tick to potion effects of player
             force player to attack loop-player
             set no damage tick of loop-player to 0
             wait 1 tick
-    item cooldown of wooden sword for player is 0 seconds
-    set item cooldown of wooden sword for player to 0.5 seconds
-    push player horizontally forwards at speed 0.4
-    push player upwards at speed 0.4
-    push player forwards at speed 0.4
-    add potion effect of slow falling of tier 1 for 0.50 seconds to potion effects of player
 
 #random items
 function randomitem() :: item:
     set {_i::0} to totem of undying 
     set {_i::1} to potion
     add potion effect of invisibility for 30 seconds to potion effects of {_i::1}
-    set {_i::2} to potion of leaping named "俊敏+跳躍"
+    set {_i::2} to potion named "俊敏+跳躍"
     add potion effect of jump boost of tier 5 for 30 seconds to potion effects of {_i::2}
     add potion effect of speed of tier 14 for 30 seconds to potion effects of {_i::2}
-    set {_i::3} to wooden sword named "抜刀剣" 
+    set {_i::3} to golden hoe named "" 
     set {_i::4} to elytra named "滑空翼" with lore "⚠️激突に注意⚠️"
     return random element of {_i::*}
+
+
+
 command /resetrole:
     permission: op
     trigger:

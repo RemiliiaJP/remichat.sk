@@ -97,7 +97,7 @@ function reset(player: player):
 #    remove every uuid of {_player} from {remi::tps::*}
 #    reset tab list header of {_player}
 #    reset tab list footer of {_player}
-    command "team join nametagkiero"
+    command "team join nametagkiero @a"
 command /reset <player>:
     permission: op
     trigger:
