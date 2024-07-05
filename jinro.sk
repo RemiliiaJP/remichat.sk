@@ -8,6 +8,7 @@ function resetrole():
     set {role::white::&b予言者} to 0
     set {role::white::&e霊媒師} to 0
     set {role::other::&1怪盗} to 0
+    set {role::white::&dエンチャンター} to 0
 function yogen(player: player) :: text:
     loop indices of {role::black::*}:
         {role::black::%loop-value%::*} contains {_player}
@@ -48,11 +49,11 @@ function giverole():
     give bow to all players
     give arrow to all players
     give redstone torch named "杖" with lore "右クリック" to all players
-    give 127 dried kelp to  all players
+    give 64 dried kelp to  all players
     set {_c} to 1
     loop shuffled all players:
         add loop-player to {player::*}
-        give randomitem() to player
+        give randomitem() to loop-player
     loop indices of {role::*}:
         loop indices of {role::%loop-value-1%::*}:
             loop {role::%loop-value-1%::%loop-value-2%} time:
@@ -63,6 +64,8 @@ function giverole():
                     command "effect give %{player::%{_c}%}% resistance infinite 0 true"
                 if loop-value-1 is "white":
                     add 1 to {role::white}
+                    if loop-value-2 is "&dエンチャンター":
+                        set level of {player::%{_c}%} to 26
                 add {player::%{_c}%} to {role::%loop-value-1%::%loop-value-2%::*}
                 send "あなたの役職は%getrole({player::%{_c}%})%" to {player::%{_c}%}
 
@@ -72,8 +75,8 @@ function rungame():
         reset(loop-player)
     delete all dropped items
     giverole()
-    set bar visibility of {_bar} to true
     set {_bar} to boss bar with id "time"
+    set bar visibility of {_bar} to true
     set {ingame} to true
     loop {time}*20 time:
         add all players to {_bar}
@@ -89,6 +92,7 @@ every 25 second:
     increase all players's level by 1
 
 function gmend(winner: text):
+    set {_bar} to boss bar with id "time"
     clear {player::*}
     set bar visibility of {_bar} to false
     set {ingame} to false
@@ -259,21 +263,33 @@ on left click:
         set item cooldown of arrow for player to 1.25 seconds
     push player forwards
 
-on left click with wooden sword:
+on click with wooden sword:
+    loop players in radius 6 of player:
+        loop 5 time:
+            add potion effect of weakness of tier 1 for 2 tick to potion effects of player
+            add potion effect of haste of tier 25 for 2 tick to potion effects of player
+            force player to attack loop-player
+            set no damage tick of loop-player to 0
+            wait 1 tick
     item cooldown of wooden sword for player is 0 seconds
     set item cooldown of wooden sword for player to 0.5 seconds
-    push player horizontally forwards at speed 0.6
-    push player downwards at speed 0.2
-    add potion effect of slow falling of tier 1 for 0.35 seconds to potion effects of player
+    push player horizontally forwards at speed 0.4
+    push player upwards at speed 0.4
+    push player forwards at speed 0.4
+    add potion effect of slow falling of tier 1 for 0.50 seconds to potion effects of player
+
 #random items
 function randomitem() :: item:
     set {_i::0} to totem of undying 
-    set {_i::1} to potion of invisibility
-    add potion effect of invisibility for 30 seconds to {_i::1}
-    set {_i::2} to potion of leaping named "俊敏+跳躍" with lore "30seconds%nl%jump:tier5%nl%speed:tier10"
-    add potion effect of jump boost of tier 5 for 30 seconds to {_i::2}
-    add potion effect of speed of tier 10 for 30 seconds to {_i::2}
+    set {_i::1} to potion
+    add potion effect of invisibility for 30 seconds to potion effects of {_i::1}
+    set {_i::2} to potion of leaping named "俊敏+跳躍"
+    add potion effect of jump boost of tier 5 for 30 seconds to potion effects of {_i::2}
+    add potion effect of speed of tier 14 for 30 seconds to potion effects of {_i::2}
     set {_i::3} to wooden sword named "抜刀剣" 
     set {_i::4} to elytra named "滑空翼" with lore "⚠️激突に注意⚠️"
-    return random elements out of {_i::*}
- 
+    return random element of {_i::*}
+command /resetrole:
+    permission: op
+    trigger:
+        resetrole()
