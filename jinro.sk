@@ -1,0 +1,244 @@
+on load:
+#    resetrole()
+    set {time} to 500 if {time} is not set
+function resetrole():
+    set {role::black::&c人狼} to 0
+    set {role::other::&d狂人} to 0
+    set {role::white::&a村人} to 0
+    set {role::white::&b予言者} to 0
+    set {role::white::&e霊媒師} to 0
+    set {role::other::&1怪盗} to 0
+function blackorwhite(player: player) :: text:
+    loop indices of {role::black::*}:
+        {role::black::%loop-value%::*} contains {_player}
+        return "%{_player}%は&4&l黒&rです。"
+        stop
+    return "%{_player}%は白です。"
+function getrole(player: player) :: text:
+    loop indices of {role::other::*}:
+        {role::other::%loop-value%::*} contains {_player}
+        return loop-value
+        stop
+    loop indices of {role::white::*}:
+        {role::white::%loop-value%::*} contains {_player}
+        return loop-value
+        stop
+    loop indices of {role::black::*}:
+        {role::black::%loop-value%::*} contains {_player}
+        return loop-value
+        stop
+
+command /start:
+    permission: op
+    trigger:
+        clear {player::*}
+        if {ingame} is not set:
+            set {ingame} to false
+        if {ingame} is true:
+            send "試合なぅ" to player
+            stop
+        {ingame} is false
+        clear {nowvote} 
+        send title "れみカス人狼スタート!!!" to all players
+        command "/playsound minecraft:entity.wolf.howl master @a ~ ~ ~ 1 0 1"
+        rungame()
+function giverole():
+    set {role::black} to 0
+    set {role::white} to 0
+    give bow to all players
+    give arrow to all players
+    give redstone torch named "杖" with lore "右クリック" to all players
+    give 127 dried kelp to  all players
+    set {_c} to 1
+    loop shuffled all players:
+        add loop-player to {player::*}
+    loop indices of {role::*}:
+        loop indices of {role::%loop-value-1%::*}:
+            loop {role::%loop-value-1%::%loop-value-2%} time:
+                if loop-value-1 is "black":
+                    add 1 to {role::black}
+                if loop-value-1 is "white":
+                    add 1 to {role::white}
+                add {player::%{_c}%} to {role::%loop-value-1%::%loop-value-2%::*}
+                send "あなたの役職は%getrole({player::%{_c}%})%" to {player::%{_c}%}
+                add 1 to {_c}
+function rungame():
+    loop all players:
+        reset(loop-player)
+    giverole()
+    set bar visibility of {_bar} to true
+    set {_bar} to boss bar with id "time"
+    set {ingame} to true
+    loop {time}*20 time:
+        add all players to {_bar}
+        set bar progress of {_bar} to 100-((loop-number/20)/{time})*100
+        gmend("white") if {role::black} <= 0
+        gmend("black") if {role::white} <= 0
+        wait tick
+        {ingame} is false
+        stop
+    gmend("time")
+every 25 second:
+    {ingame} is true
+    increase all players's level by 1
+
+function gmend(winner: text):
+    clear {player::*}
+    set bar visibility of {_bar} to false
+    set {ingame} to false
+    send title "試合終了!" to all players 
+    loop all players:
+        set metadata value "used" of loop-player to false
+        showroles(loop-player)
+        reset(loop-player)
+    if {_winner} is "time":
+        send "&7時間切れによる試合終了" to all players
+    else if {_winner} is "force":
+        send "&7管理者による強制試合終了" to all players
+    else if {_winner} is "white":
+        send "&7白陣営の勝利!!!!" to all players
+    else if {_winner} is "black":
+        send "&7黒陣営の勝利!!!!" to all players
+    loop indices of {role::white::*}:
+        clear {role::white::%loop-value%::*}
+    loop indices of {role::black::*}:
+        clear {role::black::%loop-value%::*}
+    loop indices of {role::other::*}:
+        clear {role::other::%loop-value%::*}
+    clear {nowvote} 
+command /end <text=force>:
+    permission: op
+    trigger:
+        gmend(arg)
+command /setting <text> <number>:
+    permission: op
+    trigger:
+        if arg-1 is "time":
+            set {time} to arg-2
+        broadcast "set %arg-1% to %arg-2%"
+on rightclick on a ender chest:
+    cancel event
+    player has permission "op"
+    rolegui(player)
+
+function rolegui(player: player):
+    if {ingame} is true:
+        send "役職メニューの表示を停止しました 理由：試合中" to {_player}
+        stop
+    set {_i} to {_player}'s enderchest 
+    set {_count} to 0
+    set slot integers from 0 to 36 of {_i} to air
+    loop indices of {role::*}:
+        loop indices of {role::%loop-value-1%::*}:
+            set slot {_count} of {_i} to book named loop-value-2 with lore "%{role::%loop-value-1%::%loop-value-2%}%"
+            set slot {_count} of {_i} to barrier named loop-value-2 if {role::%loop-value-1%::%loop-value-2%} <= 0
+            if loop-value-2 is "&a村人":
+                set slot {_count} of {_i} to paper named loop-value-2 with lore "%{role::%loop-value-1%::%loop-value-2%}%"
+            else:
+                add {role::%loop-value-1%::%loop-value-2%} to {_n}
+
+            add 1 to {_count}
+    set {role::white::&a村人} to real online player count-{_n} 
+    open {_i} to {_player} 
+on inventory click:
+    set {_i} to player's enderchest 
+    event-inventory is {_i}
+    cancel event
+    event-item is not paper or air
+    if inventory action is pickup all:
+        loop indices of {role::*}:
+            {role::%loop-value%::%name of event-item%} is set
+            amount of book in {_i} is smaller than real online player count 
+            add 1 to {role::%loop-value%::%name of event-item%}
+        rolegui(player)
+    else if inventory action is pickup half:
+        loop indices of {role::*}:
+            {role::%loop-value%::%name of event-item%} is set
+            {role::%loop-value%::%name of event-item%} is not smaller than 1
+            add -1 to {role::%loop-value%::%name of event-item%}
+            rolegui(player)
+    rolegui(player)
+    
+on inventory close:
+    set {_i} to player's enderchest 
+    event-inventory is {_i}
+
+
+on rightclick on chest or trapped chest or furnace or barrel or brewing stand or any stair:
+    gamemode of player is not creative
+    cancel event
+    if event-block is any stair:
+        tool of player is not bow
+        uncancel event
+on projectile hit:
+    event-projectile is arrow
+    wait 5 tick
+    delete event-projectile
+on damage of player:
+    if victim is attacker:
+        cancel event
+        stop
+    projectile is arrow
+    increase damage by 2
+
+on item damage:
+    item is bow
+    cancel event
+on death of player:
+    set death message to ""
+    reset(victim)
+    death(victim)
+    set gamemode of victim to spectator
+command /test:
+    permission: op
+    trigger:
+        showroles(player)
+        send {role::white}
+function showroles(player: player):
+    loop all players:
+        send "%getrole(loop-player)%: %loop-player%" to {_player}
+function death(player: player):
+    if getrole({_player}) contains indices of {role::black::*}:
+        remove 1 from {role::black}
+    else:
+        getrole({_player}) do not contain indices of {role::other::*}
+        remove 1 from {role::white} 
+on rightclick:
+    tool of player is redstone torch
+    selectplayersgui(player)
+function selectplayersgui(p: player):
+    set {_gui} to chest inventory with 6 rows named "能力の使用対象を選ぼう！"
+    loop {player::*}:
+        set slot loop-counter - 1 of {_gui} to loop-value's skull named "%loop-value%"
+    open {_gui} to {_p}
+on inventory click:
+    event-inventory is not player's inventory
+    event-slot is not empty
+    name of event-inventory is "能力の使用対象を選ぼう！"
+    cancel event
+    if getrole(player) is "&b予言者":
+        metadata value "used" of player is not true
+        send blackorwhite(name of event-item parsed as player)
+        set metadata value "used" of player to true
+every tick:
+    set all players's food level to 9.5
+on inventory open:
+    event-inventory is enchanting table inventory
+    set slot 1 of event-inventory to 3 lapis lazuli
+on inventory close:
+    event-inventory is enchanting table inventory
+    set slot 1 of event-inventory to air
+on inventory click:
+    event-inventory is enchanting table inventory
+    event-item is lapis lazuli
+    cancel event
+on shoot:
+    projectile is an arrow
+    remove every arrow from shooter
+    give arrow to shooter
+on place:
+    gamemode of player is not creative
+    cancel event
+on break:
+    gamemode of player is not creative
+    cancel event

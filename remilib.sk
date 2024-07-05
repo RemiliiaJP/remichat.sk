@@ -1,0 +1,143 @@
+on load:   
+    if {remi::tab} is not set:
+        set {remi::tab} to true
+command /pingtab:
+    trigger:
+        if {remi::ping::*} contains uuid of player:
+            remove all uuid of player from {remi::ping::*}
+            send "&8[remilib] &8tabのping表示を無効化しました。"
+            reset tab list header of player
+        else:
+            set {remi::ping::*} to uuid of player
+            send "&8[remilib] &8tabにpingを表示します！"
+command /tabtps:
+    trigger:
+        if {remi::tps::*} contains uuid of player:
+            remove all uuid of player from {remi::tps::*}
+            reset tab list footer of player
+            send "&8[remilib] tabのtps表示を無効化しました！"
+        else:
+            set {remi::tps::*} to uuid of player
+            send "&8[remilib] tabにtpsを表示します。"
+every 1 second:
+    loop {remi::ping::*}:
+        set player(loop-value)'s tab list header to "     &7Ping: &a&l%ping of player(loop-value)%&fms     "
+every 1 second:
+    loop tps:
+        set {_tps} to loop-value
+        stop loop
+    loop {remi::tps::*}:
+        set player(loop-value)'s tab list footer to "     &7tps: &c&l%{_tps}%     "
+on join:
+    if {remi::tab} is false:
+        unlist all players for all players
+    else:
+        list all players for all players
+command /skr:
+    permission: op
+    trigger:
+        {_a} is {_a}
+on command "/skr":
+    if command sender is console:
+        execute console command "/sk reload scripts"
+        stop
+    cancel event
+    execute player command "/sk reload scripts"
+on chat:
+    {remi::chat} is true
+    cancel event
+    gamemode of player is not spectator
+    send "%player's display name%&8：&7%message%" to all players
+command /remiconfig:
+    permission: op
+    trigger:
+        open remilibGUI() to player
+function remilibGUI() :: inventory:
+    set {_gui} to a chest inventory with 1 row named "チャット機能設定"
+    set slot 0 of {_gui} to a gray dye named "&8tablist &7無効" with lore "&8skBee必須。" if {remi::tab} is false
+    set slot 0 of {_gui} to a lime dye named "&ftablis &l有効" if {remi::tab} is true
+    return {_gui}
+on inventory click:
+    name of player's current inventory is "チャット機能設定"
+    event-inventory is not player's inventory
+    cancel event
+    if event-slot is 0:
+        if {remi::tab} is true:
+            set {remi::tab} to false
+            broadcast "&8[remilib]&r %player's display name%が&7tablistを無効化しました"
+            unlist all players for all players
+            open remilibGUI() to player
+            stop
+        else:
+            set {remi::tab} to true
+            broadcast "&8[remilib]&r %player's display name%が&ftablistを有効化しました"
+            list all players for all players
+            open remilibGUI() to player
+            stop
+function reset(player: player):
+    force {_player} to respawn
+    reset arrows stuck in {_player}
+    set {_player}'s gamemode to survival
+    close {_player}'s inventory
+    clear {_player}'s inventory
+    clear {_player}'s enderchest
+    loop all attribute types:
+        reset loop-value attribute of {_player}
+    heal {_player} by 514
+    reset level progress of {_player} 
+    reset {_player}'s level
+    reset {_player}'s food level
+    reset {_player}'s walk speed
+    clear potion effects of {_player}
+    set gravity of {_player} to on
+    make {_player} visible
+    make {_player} vulnerable
+    set {_player}'s velocity to vector 0, 0, 0
+#    remove every uuid of {_player} from {remi::ping::*}
+#    remove every uuid of {_player} from {remi::tps::*}
+#    reset tab list header of {_player}
+#    reset tab list footer of {_player}
+    command "team leave %{_player}%"
+command /reset <player>:
+    permission: op
+    trigger:
+        reset(arg-1)
+command /ping-all:
+    trigger:
+        send "&8[remilib]&r &7ping of all players"
+        loop all players:
+            set {_p} to ping of loop-player
+            send "&7%name of loop-player%:&a%{_p}%" to player
+            add {_p} to {_n}
+            set {_c} to loop-counter
+        send "&cAvg:&9%{_n}/{_c}%" to player
+command /head <offlineplayer>:
+    trigger:
+        if player has permission "op":
+            give arg-1's skull to player
+            stop
+        if player's gamemode is creative:
+            give arg-1's skull to player
+        else:
+            send "&8[remilib]&r &7クリエになって使ってください"
+#gsit
+on right click on any bed:
+    set {_data} to block data of clicked block
+    "%{_data}%" contains "head"
+    force teleport player at clicked block 
+    command "/execute at %player% run teleport %player% ~ ~ ~ ~180 ~"
+    execute player command "lay"
+on swap hand items:
+    execute player command "crawl"
+
+command /gm <text>:
+    permission: op
+    trigger:
+        if arg is "0", "survival" or "sv":
+            set gamemode of player to survival
+        if arg is "1", "creative", "cre" or "c":
+            set gamemode of player to creative
+        if arg is "2", "adventure", "a" or "adv":
+            set gamemode of player to adventure
+        if arg is "3", "spectator", "spec", "sp" or "s":
+            set gamemode of player to spectator
