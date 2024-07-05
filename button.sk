@@ -1,0 +1,93 @@
+on load:
+	wait 1 tick
+	set {item::vote} to diamond horse armor named "§5右クリックで投票" with lore "§8Precursor Relic%nl% %nl%§7The hilt of the largest sword%nl%§7known to humankind.%nl% %nl%§eRight-click to view vote!%nl% %nl%§5§lEPIC DUNGEON ITEM"
+on rightclick on a mangrove button:
+	{ingame} is true
+	button(player, {votetime})
+function button(p: player ,time: number):
+	if {nowvote} is true:
+		send "すでに投票時間またはボタンクールタイムです！" to {_p}
+		stop
+	set {nowvote} to true
+	set {_loc} to {_p}'s location
+	loop all players: 
+		set {_loc.%loop-player%} to loop-player's location
+	loop 20 time:
+		send title "§c§o§lDiscuss!" to all players with fade-in 0 tick if mod(loop-number, 2) is 0
+		send title "§e§o§lDiscuss!" to all players with fade-in 0 tick if mod(loop-number, 2) is not 0
+		loop 21-loop-number time:
+			play sound "block.note_block.didgeridoo" with volume 1 and pitch 0.6 at {_p}
+		wait 1 tick
+	teleport all players to {_loc}
+	give {item::vote} to all players
+	make all players invulnerable
+	loop {votetime}*20 time:
+		send title " " with subtitle "%round({votetime} - loop-number/20, 0)%" to all players with fadein 0 second
+		wait 1 tick
+		stop loop if {ingame} is false
+	remove all {item::vote} from  inventory of all players
+	send title "投票終了" to all players
+	loop all players:
+		gamemode of loop-player is not spectator 
+		{v.%loop-player%} is set
+		add 1 to {_v::%{v.%loop-player%}%}
+	broadcast "投票終了"
+	loop all players:
+		{_v::%name of loop-player%} is set
+		broadcast "%name of loop-player%：%{_v::%name of loop-player%}%"
+	set {_aga::*} to last 2 elements of sorted {_v::*}
+	if {_aga::2} is not set:
+		loop {_v::*}:
+			loop-value is {_aga::1}
+			set {_takusan} to loop-index
+	if {_aga::1} is not {_aga::2}:
+		loop {_v::*}:
+			loop-value is {_aga::2}
+			set {_takusan} to loop-index
+#		set {_takusan} to {_takusan} parsed as player
+	command "/effect give %{_takusan}% glowing %{votetime}*4% 1 true" if {_takusan} is set
+	send title " " with subtitle "%{_takusan}%が発光された" to all players
+	send title " " with subtitle "同数なので何も起こらなかった" to all players if {_takusan} is not set
+	close inventory for all players
+
+	wait 5 seconds
+	loop all players:
+		clear {v.%loop-player%}
+		teleport loop-player to {_loc.%loop-player%} 
+	wait 3 second	
+	make all players vulnerable
+	loop {votetime}*4*20 time:
+		wait 1 tick
+		stop loop if {ingame} is false
+	clear {nowvote} 
+	
+on right click:
+	set {_tool} to player's tool
+	{_tool} is {item::vote}
+	cancel event
+	votemenu(player)
+function votemenu(p: player):
+	set {_gui} to chest inventory with 6 rows named "投票先を選ぼう！"
+	loop {player::*}:
+		loop-value's gamemode is not spectator
+		set slot loop-counter - 1 of {_gui} to loop-value's skull named "%loop-value%"
+	open {_gui} to {_p} 
+on inventory click:
+	event-inventory is not player's inventory
+	event-slot is not empty
+	name of event-inventory is "投票先を選ぼう！"
+	cancel event
+	set {v.%player%} to name of event-item
+	send "%{v.%player%}%に投票してみました"
+	wait 1 tick
+	close inventory for player
+command /setting-vote <text> <number=60>:
+	permission: op
+	trigger:
+		if arg-1 is "time":
+			set {votetime} to arg-2
+			broadcast "投票タイムを%{votetime}%に設定"
+on tab complete of "/setting-vote":
+	set tab completions for position 1 to "time"
+on drop:
+	cancel event if event-item is {item::vote}

@@ -8,7 +8,7 @@ function resetrole():
     set {role::white::&b予言者} to 0
     set {role::white::&e霊媒師} to 0
     set {role::other::&1怪盗} to 0
-function blackorwhite(player: player) :: text:
+function yogen(player: player) :: text:
     loop indices of {role::black::*}:
         {role::black::%loop-value%::*} contains {_player}
         return "%{_player}%は&4&l黒&rです。"
@@ -57,14 +57,19 @@ function giverole():
             loop {role::%loop-value-1%::%loop-value-2%} time:
                 if loop-value-1 is "black":
                     add 1 to {role::black}
+                    command "effect give %{player::%{_c}%}% regeneration infinite 0 true"
+                    command "effect give %{player::%{_c}%}% night_vision infinite 7 true"
+                    command "effect give %{player::%{_c}%}% resistance infinite 0 true"
                 if loop-value-1 is "white":
                     add 1 to {role::white}
                 add {player::%{_c}%} to {role::%loop-value-1%::%loop-value-2%::*}
                 send "あなたの役職は%getrole({player::%{_c}%})%" to {player::%{_c}%}
+
                 add 1 to {_c}
 function rungame():
     loop all players:
         reset(loop-player)
+    delete all dropped items
     giverole()
     set bar visibility of {_bar} to true
     set {_bar} to boss bar with id "time"
@@ -164,7 +169,7 @@ on inventory close:
     event-inventory is {_i}
 
 
-on rightclick on chest or trapped chest or furnace or barrel or brewing stand or any stair:
+on rightclick on chest or trapped chest or furnace or barrel or brewing stand or any stair or any sign:
     gamemode of player is not creative
     cancel event
     if event-block is any stair:
@@ -179,8 +184,10 @@ on damage of player:
         cancel event
         stop
     projectile is arrow
-    increase damage by 2
-
+    if getrole(attacker) is "&c人狼":
+        increase damage by 3  
+    else:
+        increase damage by 2
 on item damage:
     item is bow
     cancel event
@@ -218,7 +225,7 @@ on inventory click:
     cancel event
     if getrole(player) is "&b予言者":
         metadata value "used" of player is not true
-        send blackorwhite(name of event-item parsed as player)
+        send yogen(name of event-item parsed as player)
         set metadata value "used" of player to true
 every tick:
     set all players's food level to 9.5
@@ -242,3 +249,10 @@ on place:
 on break:
     gamemode of player is not creative
     cancel event
+on left click:
+    item cooldown of arrow for player is 0 seconds
+    if getrole(player) is "&c人狼":
+        set item cooldown of arrow for player to 1 seconds
+    else:
+        set item cooldown of arrow for player to 1.25 seconds
+    push player forwards

@@ -97,7 +97,7 @@ function reset(player: player):
 #    remove every uuid of {_player} from {remi::tps::*}
 #    reset tab list header of {_player}
 #    reset tab list footer of {_player}
-    command "team leave %{_player}%"
+    command "team join nametagkiero"
 command /reset <player>:
     permission: op
     trigger:
@@ -141,3 +141,4 @@ command /gm <text>:
             set gamemode of player to adventure
         if arg is "3", "spectator", "spec", "sp" or "s":
             set gamemode of player to spectator
+            
