@@ -52,6 +52,7 @@ function giverole():
     set {_c} to 1
     loop shuffled all players:
         add loop-player to {player::*}
+        give randomitem() to player
     loop indices of {role::*}:
         loop indices of {role::%loop-value-1%::*}:
             loop {role::%loop-value-1%::%loop-value-2%} time:
@@ -250,9 +251,29 @@ on break:
     gamemode of player is not creative
     cancel event
 on left click:
+    tool of player is not wooden sword 
     item cooldown of arrow for player is 0 seconds
     if getrole(player) is "&c人狼":
         set item cooldown of arrow for player to 1 seconds
     else:
         set item cooldown of arrow for player to 1.25 seconds
     push player forwards
+
+on left click with wooden sword:
+    item cooldown of wooden sword for player is 0 seconds
+    set item cooldown of wooden sword for player to 0.5 seconds
+    push player horizontally forwards at speed 0.6
+    push player downwards at speed 0.2
+    add potion effect of slow falling of tier 1 for 0.35 seconds to potion effects of player
+#random items
+function randomitem() :: item:
+    set {_i::0} to totem of undying 
+    set {_i::1} to potion of invisibility
+    add potion effect of invisibility for 30 seconds to {_i::1}
+    set {_i::2} to potion of leaping named "俊敏+跳躍" with lore "30seconds%nl%jump:tier5%nl%speed:tier10"
+    add potion effect of jump boost of tier 5 for 30 seconds to {_i::2}
+    add potion effect of speed of tier 10 for 30 seconds to {_i::2}
+    set {_i::3} to wooden sword named "抜刀剣" 
+    set {_i::4} to elytra named "滑空翼" with lore "⚠️激突に注意⚠️"
+    return random elements out of {_i::*}
+ 
