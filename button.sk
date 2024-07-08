@@ -45,7 +45,7 @@ function button(p: player ,time: number):
 			loop-value is {_aga::2}
 			set {_takusan} to loop-index
 #		set {_takusan} to {_takusan} parsed as player
-	command "/effect give %{_takusan}% glowing %{votetime}*4% 1 true" if {_takusan} is set
+	command "/effect give %{_takusan}% glowing %{votetime}*5+8% 1 true" if {_takusan} is set
 	send title " " with subtitle "%{_takusan}%が発光された" to all players
 	send title " " with subtitle "同数なので何も起こらなかった" to all players if {_takusan} is not set
 	close inventory for all players
@@ -56,7 +56,7 @@ function button(p: player ,time: number):
 		teleport loop-player to {_loc.%loop-player%} 
 	wait 3 second	
 	make all players vulnerable
-	loop {votetime}*4*20 time:
+	loop {votetime}*5*20 time:
 		wait 1 tick
 		stop loop if {ingame} is false
 	clear {nowvote} 
