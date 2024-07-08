@@ -2,11 +2,14 @@ on load:
 #    resetrole()
     set {time} to 500 if {time} is not set
 function resetrole():
+    clear {role::black::*}
+    clear {role::white::*}
+    clear {role::other::*}
     set {role::black::&c人狼} to 0
     set {role::other::&d狂人} to 0
     set {role::white::&a村人} to 0
     set {role::white::&b予言者} to 0
-    set {role::white::&e霊媒師} to 0
+    set {role::white::&e探偵} to 0
     set {role::other::&1怪盗} to 0
     set {role::white::&dエンチャンター} to 0
 function yogen(player: player) :: text:
@@ -42,6 +45,7 @@ command /start:
         clear {nowvote} 
         send title "れみカス人狼スタート!!!" to all players
         command "/playsound minecraft:entity.wolf.howl master @a ~ ~ ~ 1 0 1"
+        set {spawn} to location of player
         rungame()
 function giverole():
     set {role::black} to 0
@@ -64,12 +68,18 @@ function giverole():
                     command "effect give %{player::%{_c}%}% resistance infinite 0 true"
                 if loop-value-1 is "white":
                     add 1 to {role::white}
-                    if loop-value-2 is "&dエンチャンター":
-                        set level of {player::%{_c}%} to 29
+                if loop-value-2 is "&dエンチャンター":
+                    set level of {player::%{_c}%} to 29
                 add {player::%{_c}%} to {role::%loop-value-1%::%loop-value-2%::*}
-                send "あなたの役職は%getrole({player::%{_c}%})%" to {player::%{_c}%}
-
                 add 1 to {_c}
+    loop all players:
+        checkmyrole(loop-player)        
+function checkmyrole(player: player):
+    send "あなたの役職は%getrole({_player})%&rです" to {_player}
+    getrole({_player}) is "&c人狼"
+    loop {role::black::&c人狼::*}:
+        add loop-value to {_b::*}              
+    send "仲間は%{_b::*}%" to {_player}
 function rungame():
     loop all players:
         reset(loop-player)
@@ -97,6 +107,7 @@ function gmend(winner: text):
     set bar visibility of {_bar} to false
     set {ingame} to false
     send title "試合終了!" to all players 
+    force teleport all players to {spawn}
     loop all players:
         set metadata value "used" of loop-player to false
         showroles(loop-player)
@@ -116,6 +127,7 @@ function gmend(winner: text):
     loop indices of {role::other::*}:
         clear {role::other::%loop-value%::*}
     clear {nowvote} 
+    clear {player::spec::*}
 command /end <text=force>:
     permission: op
     trigger:
@@ -137,6 +149,10 @@ function rolegui(player: player):
         stop
     set {_i} to {_player}'s enderchest 
     set {_count} to 0
+    loop all books in {_i}:
+        add item amount of loop-item to {_a}
+    set {role::white::&a村人} to real online player count - {_a}
+
     set slot integers from 0 to 36 of {_i} to air
     loop indices of {role::*}:
         loop indices of {role::%loop-value-1%::*}:
@@ -144,11 +160,8 @@ function rolegui(player: player):
             set slot {_count} of {_i} to barrier named loop-value-2 if {role::%loop-value-1%::%loop-value-2%} <= 0
             if loop-value-2 is "&a村人":
                 set slot {_count} of {_i} to paper named loop-value-2 with lore "%{role::%loop-value-1%::%loop-value-2%}%"
-            else:
-                add {role::%loop-value-1%::%loop-value-2%} to {_n}
 
-            add 1 to {_count}
-    set {role::white::&a村人} to real online player count-{_n} 
+            add 1 to {_count}    
     open {_i} to {_player} 
 on inventory click:
     set {_i} to player's enderchest 
@@ -203,31 +216,45 @@ on damage of player:
     if tool of victim or offhand tool of victim is totem of undying:
         remove 1 totem of undying from victim
         command "/execute as %victim% at @s run playsound minecraft:item.totem.use"
-        heal victim by 5
+        heal victim by 15
+        add potion effect of resistance of tier 5 for 5 seconds to potion effects of victim
+        add potion effect of glowing of tier 5 for 5 seconds to potion effects of victim
         cancel event
 
 on death of player:
+    force victim to respawn
+    {ingame} is true
+    set {_p} to victim
     set death message to ""
+    cancel event if gamemode of victim is not spectator
+    drop victim's skull named "%victim%"
     reset(victim)
     death(victim)
     set gamemode of victim to spectator
+    set {player::spec::*} to {_p}
+    wait 1 tick
+    force teleport victim to {spawn}
 command /test:
     permission: op
     trigger:
         showroles(player)
         send {role::white}
+        send {role::black}
 function showroles(player: player):
     loop all players:
         send "%getrole(loop-player)%: %loop-player%" to {_player}
 function death(player: player):
+    {_player} do not contain {player::spec::*}
     if getrole({_player}) contains indices of {role::black::*}:
         remove 1 from {role::black}
     else:
-        getrole({_player}) do not contain indices of {role::other::*}
+        getrole({_player}) is not "&1怪盗" or "&d狂人"
         remove 1 from {role::white} 
+
 on rightclick:
     tool of player is redstone torch
-    selectplayersgui(player)
+    checkmyrole(player)
+    selectplayersgui(player) if getrole(player) is "&b予言者"
 function selectplayersgui(p: player):
     set {_gui} to chest inventory with 6 rows named "能力の使用対象を選ぼう！"
     loop {player::*}:
@@ -274,11 +301,11 @@ on left click:
     push player forwards
 
 on click with golden hoe:
+    tool of player is golden hoe
     item cooldown of golden hoe for player is 0 seconds
     set item cooldown of golden hoe for player to 0.5 seconds
-    push player horizontally forwards at speed 0.4
-    push player forwards at speed 0.8
-    add potion effect of slow falling of tier 1 for 0.50 seconds to potion effects of player
+    push player forwards at speed 1
+    add potion effect of slow falling of tier 1 for 1 seconds to potion effects of player
     loop players in radius 6 of player:
         loop 5 time:
             force player to attack loop-player
@@ -295,6 +322,10 @@ function randomitem() :: item:
     add potion effect of speed of tier 14 for 30 seconds to potion effects of {_i::2}
     set {_i::3} to golden hoe named "" 
     set {_i::4} to elytra named "滑空翼" with lore "⚠️激突に注意⚠️"
+    set {_i::5} to potion named "透明+再生"
+    add potion effect of invisibility for 30 seconds to potion effects of {_i::5}
+    add potion effect of regeneration of tier 3 for 30 seconds to potion effects of {_i::5}
+
     return random element of {_i::*}
 
 
@@ -303,3 +334,21 @@ command /resetrole:
     permission: op
     trigger:
         resetrole()
+on join:
+    {ingame} is true
+    set gamemode of player to spectator 
+    set {player::spec::*} to player
+on leave:
+    {ingame} is true
+    death(player)
+on player pick up of player skull:
+    if getrole(player) is not "&e探偵":
+        cancel event
+        stop
+        metadata value "used" of player is not true
+    set {_target} to event-item's name parsed as player
+    send yogen({_target}) to player
+    set metadata value "used" of player to true
+
+
+jinro.sk一番最後の行
