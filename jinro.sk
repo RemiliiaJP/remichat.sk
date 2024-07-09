@@ -202,12 +202,17 @@ on damage of player:
         cancel event
         stop
     projectile is arrow
-    if tool of victim or offhand tool of victim is totem of undying:
-        increase damage by 0.5
-    else if getrole(attacker) is "&c人狼":
+    if getrole(attacker) is "&c人狼":
+        if tool of victim or offhand tool of victim is totem of undying:
+            increase damage by 1
+            stop
         increase damage by 3  
     else:
+        if tool of victim or offhand tool of victim is totem of undying:
+            increase damage by 0.5
+            stop
         increase damage by 2
+
 on item damage:
     item is bow
     cancel event
@@ -232,7 +237,8 @@ on death of player:
     death(victim)
     set gamemode of victim to spectator
     set {player::spec::*} to {_p}
-    wait 1 tick
+on death of player:
+    wait 2 tick
     force teleport victim to {spawn}
 command /test:
     permission: op
