@@ -22,7 +22,9 @@ command /tabtps:
 every 1 second:
     loop {remi::ping::*}:
         set player(loop-value)'s tab list header to "     &7Ping: &a&l%ping of player(loop-value)%&fms     "
-every 1 second:
+every 5 tick:
+    loop all players:
+        set tab list footer of loop-player to "接続時間：%time played of loop-player%"
     loop tps:
         set {_tps} to loop-value
         stop loop
@@ -141,4 +143,5 @@ command /gm <text>:
             set gamemode of player to adventure
         if arg is "3", "spectator", "spec", "sp" or "s":
             set gamemode of player to spectator
-            
+on join:
+    set player's time played to 0 seconds
